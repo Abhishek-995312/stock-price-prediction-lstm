@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Price Prediction</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0B1220;
+    --bg-panel: #101A2E;
+    --ink: #E8ECF1;
+    --muted: #5C6B82;
+    --green: #2FD675;
+    --amber: #F2A93B;
+    --line: #1E2A42;
+    --red: #E5546B;
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Mono', monospace;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    overflow-x:hidden;
+  }
+
+  .ticker-wrap{
+    width:100%;
+    background: var(--bg-panel);
+    border-bottom:1px solid var(--line);
+    overflow:hidden;
+    padding: 10px 0;
+    white-space:nowrap;
+  }
+  .ticker{
+    display:inline-block;
+    animation: scroll 28s linear infinite;
+    font-size:0.85rem;
+    letter-spacing:0.03em;
+  }
+  .ticker span{ margin-right:2.5rem; color:var(--muted); }
+  .ticker span.up{ color:var(--green); }
+  .ticker span.down{ color:var(--red); }
+  @keyframes scroll{
+    0%{ transform: translateX(0); }
+    100%{ transform: translateX(-50%); }
+  }
+
+  main{
+    width:100%;
+    max-width:520px;
+    padding: 4.5rem 1.5rem 3rem;
+    text-align:center;
+  }
+
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size: clamp(1.8rem, 5vw, 2.6rem);
+    letter-spacing:-0.01em;
+    margin:0 0 0.4rem;
+  }
+  h1 .accent{ color: var(--amber); }
+
+  .subtitle{
+    color: var(--muted);
+    font-size:0.9rem;
+    margin:0 0 3rem;
+  }
+
+  .card{
+    background: var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding: 2.2rem 1.8rem;
+    text-align:left;
+  }
+
+  label{
+    display:block;
+    font-size:0.72rem;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color: var(--muted);
+    margin-bottom:0.6rem;
+  }
+
+  input[type="text"]{
+    width:100%;
+    background: var(--bg);
+    border:1px solid var(--line);
+    border-radius:6px;
+    color: var(--ink);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:1rem;
+    padding: 0.85rem 1rem;
+    outline:none;
+    transition: border-color 0.15s ease;
+  }
+  input[type="text"]::placeholder{ color:#3A465E; }
+  input[type="text"]:focus{ border-color: var(--amber); }
+  input[type="text"]:focus-visible{ outline: 2px solid var(--amber); outline-offset:2px; }
+
+  .predict-label{
+    text-align:center;
+    font-size:0.78rem;
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    color: var(--green);
+    margin: 1.8rem 0 0.7rem;
+  }
+
+  button{
+    width:100%;
+    background: var(--green);
+    color: #06210F;
+    border:none;
+    border-radius:6px;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:1rem;
+    padding: 0.9rem 1rem;
+    cursor:pointer;
+    transition: transform 0.12s ease, background 0.15s ease;
+  }
+  button:hover{ background:#3FE888; }
+  button:active{ transform: scale(0.98); }
+  button:focus-visible{ outline:2px solid var(--amber); outline-offset:2px; }
+
+  #result{
+    margin-top:1.4rem;
+    padding:1rem;
+    border-radius:6px;
+    border:1px dashed var(--line);
+    font-size:0.9rem;
+    color: var(--muted);
+  }
+  #result strong{ color: var(--ink); }
+  #result.error{ border-color: var(--red); color: var(--red); }
+  #result .price{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:1.6rem;
+    font-weight:700;
+    color: var(--green);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .ticker{ animation: none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="ticker-wrap">
+    <div class="ticker" id="ticker"></div>
+  </div>
+
+  <main>
+    <h1>Stock Price <span class="accent">Prediction</span></h1>
+    <p class="subtitle">Enter a ticker to see tomorrow's projected move</p>
+
+    <div class="card">
+      <!-- Real form submit to Flask — matches app.py's /predict route -->
+      <form action="/predict" method="POST">
+        <label for="ticker">Enter company stock name</label>
+        <input type="text" id="ticker" name="ticker" placeholder="e.g. AAPL, TSLA, RELIANCE.NS" autocomplete="off" required>
+
+        <p class="predict-label">Predict tomorrow price</p>
+        <button type="submit">Submit</button>
+      </form>
+
+      <!-- Rendered server-side by Flask via Jinja, using values from app.py -->
+      {% if predicted_price %}
+      <div id="result">
+        Prediction for <strong>{{ ticker }}</strong>:
+        <div class="price">${{ predicted_price }}</div>
+      </div>
+      {% elif error %}
+      <div id="result" class="error">{{ error }}</div>
+      {% endif %}
+    </div>
+  </main>
+
+<script>
+  // Signature scrolling ticker tape — decorative only, duplicated for seamless loop
+  const symbols = [
+    ['AAPL','+1.24%','up'], ['TSLA','-0.87%','down'], ['MSFT','+0.42%','up'],
+    ['AMZN','-0.15%','down'], ['GOOGL','+0.63%','up'], ['NVDA','+2.10%','up'],
+    ['META','-0.33%','down'], ['INFY','+0.90%','up']
+  ];
+  const tickerEl = document.getElementById('ticker');
+  const row = symbols.map(([s,c,d]) => `<span class="${d}">${s} ${c}</span>`).join('');
+  tickerEl.innerHTML = row + row;
+</script>
+
+</body>
+</html>
